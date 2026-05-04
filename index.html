@@ -3,78 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Вчимо кольори разом! 🌈</title>
+    <title>Color Magic: Learn & Play 🌈</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@900&display=swap');
         
         body { 
             margin: 0; overflow: hidden; font-family: 'Nunito', sans-serif;
             background: #1a0033; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh;
+            height: 100vh; color: white;
         }
 
+        /* Прогрес */
         #progress-container {
             position: absolute; top: 20px; width: 90%;
-            display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
         }
-        .dot { width: 15px; height: 15px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: 0.3s; }
-        .dot.active { background: #FFD700; transform: scale(1.3); box-shadow: 0 0 10px #FFD700; }
+        .dot { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: 0.4s; }
+        .dot.active { background: #FFD700; transform: scale(1.3); box-shadow: 0 0 15px #FFD700; }
 
+        /* Коло кольору */
         #color-circle {
-            width: 220px; height: 220px; border-radius: 50%;
-            border: 8px solid white; box-shadow: 0 0 40px rgba(255,255,255,0.1);
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 240px; height: 240px; border-radius: 50%;
+            border: 10px solid white; box-shadow: 0 0 50px rgba(255,255,255,0.1);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             margin-bottom: 30px; display: none;
         }
 
+        /* Кнопка мікрофона */
         #mic-btn {
-            width: 90px; height: 90px; border-radius: 50%;
+            width: 100px; height: 100px; border-radius: 50%;
             border: none; background: #ff3d7f; cursor: pointer;
             display: none; align-items: center; justify-content: center;
-            font-size: 2.5rem; box-shadow: 0 6px 0 #b32a59;
-            transition: all 0.2s;
+            font-size: 3rem; box-shadow: 0 8px 0 #b32a59;
+            transition: all 0.2s; z-index: 10;
         }
-        #mic-btn.listening { background: #00c170; box-shadow: 0 0 30px #00c170; animation: pulse 1s infinite; }
+        #mic-btn.listening { 
+            background: #00c170; box-shadow: 0 0 40px #00c170; 
+            animation: pulse-mic 1s infinite; 
+        }
         
-        @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.1);} 100% {transform: scale(1);} }
+        @keyframes pulse-mic { 0% {transform: scale(1);} 50% {transform: scale(1.1);} 100% {transform: scale(1);} }
 
         #status-text {
-            color: white; font-size: 1.6rem; text-align: center;
-            margin-top: 20px; padding: 0 25px; min-height: 3em; line-height: 1.4;
+            font-size: 1.8rem; text-align: center; margin-top: 25px;
+            padding: 0 30px; min-height: 2.5em; line-height: 1.3; font-weight: 900;
         }
 
         /* Екрани */
-        #start-overlay, #win-overlay {
+        .overlay {
             position: fixed; inset: 0; background: #1a0033; z-index: 100;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center;
         }
-        #win-overlay { display: none; background: rgba(26, 0, 51, 0.95); }
+        #win-overlay { display: none; background: rgba(26, 0, 51, 0.98); }
 
         .btn-main {
-            padding: 20px 50px; font-size: 2rem; border-radius: 30px; border: none;
+            padding: 22px 55px; font-size: 2.2rem; border-radius: 35px; border: none;
             background: #FFD700; color: #1a0033; font-weight: 900; cursor: pointer;
-            box-shadow: 0 8px 0 #b39700; transition: transform 0.1s;
+            box-shadow: 0 10px 0 #b39700; font-family: 'Nunito', sans-serif;
         }
-        .btn-main:active { transform: translateY(4px); box-shadow: 0 4px 0 #b39700; }
+        .btn-main:active { transform: translateY(6px); box-shadow: 0 4px 0 #b39700; }
+
+        .title { font-size: 3.5rem; margin-bottom: 20px; color: #FFD700; }
     </style>
 </head>
 <body>
 
-    <div id="start-overlay">
-        <div style="font-size: 5rem; margin-bottom: 20px;">🎨🌈✨</div>
-        <button id="btn-go" class="btn-main">ПОЧАТИ ГРУ</button>
+    <div id="start-overlay" class="overlay">
+        <div style="font-size: 6rem; margin-bottom: 10px;">🎨🌈</div>
+        <div class="title">Кольорова<br>Магія</div>
+        <button id="btn-go" class="btn-main">ПОЧАТИ!</button>
     </div>
 
-    <div id="win-overlay">
-        <div style="font-size: 6rem; margin-bottom: 20px;">🏆🎉🎈</div>
-        <h1 style="color: #FFD700; text-align: center; margin-bottom: 20px;">ПЕРЕМОГА!</h1>
-        <button id="btn-restart" class="btn-main">ГРАТИ ЩЕ РАЗ</button>
+    <div id="win-overlay" class="overlay">
+        <div style="font-size: 7rem; margin-bottom: 10px;">🏆🥳</div>
+        <div class="title">НЕЙМОВІРНО!</div>
+        <p style="font-size: 1.5rem; margin-bottom: 30px;">Ти вивчив усі кольори!</p>
+        <button id="btn-restart" class="btn-main">ГРАТИ ЗНОВУ</button>
     </div>
 
     <div id="progress-container"></div>
     <div id="color-circle"></div>
     <button id="mic-btn">🎤</button>
-    <div id="status-text">Готовий?</div>
+    <div id="status-text">Завантаження...</div>
 
     <script>
         const colorCircle = document.getElementById('color-circle');
@@ -83,43 +94,50 @@
         const progressContainer = document.getElementById('progress-container');
         const winOverlay = document.getElementById('win-overlay');
 
+        // Повний список кольорів (UA, RU, EN + транслітерація для точності)
         const allColors = [
-            { hex: '#FF0000', names: ['червоний', 'красный', 'red'] },
-            { hex: '#0000FF', names: ['синій', 'синий', 'blue'] },
-            { hex: '#00FF00', names: ['зелений', 'зеленый', 'green'] },
-            { hex: '#FFFF00', names: ['жовтий', 'желтый', 'yellow'] },
-            { hex: '#FF8C00', names: ['оранжевий', 'помаранчевий', 'оранжевый', 'orange'] },
-            { hex: '#FF00FF', names: ['рожевий', 'розовый', 'pink'] },
-            { hex: '#FFFFFF', names: ['білий', 'белый', 'white'] },
-            { hex: '#000000', names: ['чорний', 'черный', 'black'] },
-            { hex: '#8B4513', names: ['коричневий', 'коричневый', 'brown'] },
-            { hex: '#808080', names: ['сірий', 'серый', 'gray'] }
+            { hex: '#FF0000', names: ['червоний', 'красний', 'red', 'ред'] },
+            { hex: '#0000FF', names: ['синій', 'голубий', 'синий', 'голубой', 'blue', 'блю'] },
+            { hex: '#00FF00', names: ['зелений', 'зеленый', 'green', 'грін', 'грин'] },
+            { hex: '#FFFF00', names: ['жовтий', 'желтый', 'yellow', 'єлоу', 'еллоу'] },
+            { hex: '#FF8C00', names: ['оранжевий', 'помаранчевий', 'оранжевый', 'orange', 'оранж'] },
+            { hex: '#FF00FF', names: ['рожевий', 'розовый', 'pink', 'пінк', 'пінкі'] },
+            { hex: '#FFFFFF', names: ['білий', 'белый', 'white', 'вайт'] },
+            { hex: '#000000', names: ['чорний', 'черный', 'black', 'блек'] },
+            { hex: '#8B4513', names: ['коричневий', 'коричневый', 'brown', 'браун'] },
+            { hex: '#808080', names: ['сірий', 'серый', 'gray', 'grey', 'грей'] },
+            { hex: '#800080', names: ['фіолетовий', 'пурпурний', 'фиолетовый', 'purple', 'перпл'] }
         ];
 
         let remainingColors = [];
         let solvedCount = 0;
         let currentTarget = null;
 
-        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-        recognition.lang = 'uk-UA';
+        // Налаштування мікрофона
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        recognition.lang = 'uk-UA'; // Основна мова слуху
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 5; // ВАЖЛИВО: дозволяє ловити англійські слова в укр. контексті
 
-        function speak(text, onEnd) {
+        function speak(text, callback) {
+            window.speechSynthesis.cancel();
             const u = new SpeechSynthesisUtterance(text);
             u.lang = 'uk-UA';
             u.rate = 0.9;
-            if (onEnd) u.onend = onEnd;
+            u.pitch = 1.1;
+            if (callback) u.onend = callback;
             window.speechSynthesis.speak(u);
         }
 
         function initGame() {
-            remainingColors = [...allColors];
+            remainingColors = [...allColors].sort(() => Math.random() - 0.5);
             solvedCount = 0;
             winOverlay.style.display = 'none';
             colorCircle.style.display = 'block';
-            colorCircle.style.transform = "scale(1)";
             micBtn.style.display = 'flex';
             
-            // Скидання крапок прогресу
             progressContainer.innerHTML = '';
             allColors.forEach(() => {
                 const dot = document.createElement('div');
@@ -132,23 +150,20 @@
 
         document.getElementById('btn-go').onclick = () => {
             document.getElementById('start-overlay').style.display = 'none';
-            const intro = "Привіт! Називай кольори, які бачиш. Натискай на мікрофон і говори!";
-            speak(intro);
-            initGame();
+            // ГОЛОСОВА ІНСТРУКЦІЯ
+            const intro = "Привіт! Давай вивчимо кольори. Називай колір кола, який бачиш. Натискай на мікрофон і говори! Починаємо!";
+            speak(intro, () => initGame());
+            statusText.textContent = "Слухай завдання...";
         };
 
-        document.getElementById('btn-restart').onclick = () => {
-            initGame();
-            speak("Починаємо знову! Який це колір?");
-        };
+        document.getElementById('btn-restart').onclick = () => initGame();
 
         function nextTask() {
             if (remainingColors.length === 0) {
                 showWin();
                 return;
             }
-            const randomIndex = Math.floor(Math.random() * remainingColors.length);
-            currentTarget = remainingColors[randomIndex];
+            currentTarget = remainingColors.pop();
             colorCircle.style.backgroundColor = currentTarget.hex;
             statusText.textContent = "Який це колір?";
         }
@@ -156,35 +171,43 @@
         function showWin() {
             colorCircle.style.display = "none";
             micBtn.style.display = "none";
-            statusText.textContent = "";
             winOverlay.style.display = 'flex';
-            speak("Вітаю! Ти знаєш усі кольори! Ти справжній розумник!");
+            speak("Ура! Ти знаєш усі кольори! Ти справжній розумник!");
         }
 
         micBtn.onclick = () => {
-            recognition.start();
+            try { recognition.start(); } catch(e) {}
             micBtn.classList.add('listening');
+            statusText.textContent = "Я слухаю...";
         };
 
         recognition.onresult = (event) => {
             micBtn.classList.remove('listening');
-            const result = event.results[0][0].transcript.toLowerCase();
-            const isCorrect = currentTarget.names.some(name => result.includes(name));
+            
+            // Беремо всі варіанти розпізнавання (для підтримки англійської)
+            const alternatives = Array.from(event.results[0])
+                                      .map(a => a.transcript.toLowerCase());
+            
+            console.log("Почув варіанти:", alternatives);
+
+            const isCorrect = alternatives.some(heard => 
+                currentTarget.names.some(valid => heard.includes(valid))
+            );
 
             if (isCorrect) {
-                remainingColors = remainingColors.filter(c => c !== currentTarget);
                 document.querySelectorAll('.dot')[solvedCount].classList.add('active');
                 solvedCount++;
-                statusText.textContent = `Так, це ${result}! ✨`;
-                speak(`Молодець!`);
+                statusText.textContent = "Правильно! ✨";
+                speak("Так! Супер!");
                 setTimeout(nextTask, 1500);
             } else {
-                statusText.textContent = `Ой, спробуй ще!`;
-                speak("Спробуй ще раз!");
+                statusText.textContent = "Майже! Спробуй ще раз!";
+                speak("Ой, спробуй ще раз!");
             }
         };
 
         recognition.onerror = () => micBtn.classList.remove('listening');
+        recognition.onspeechend = () => recognition.stop();
     </script>
 </body>
 </html>
