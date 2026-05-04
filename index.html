@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Кольорова Магія! 🌈</title>
+    <title>Вчимо кольори разом! 🌈</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@900&display=swap');
         
@@ -13,140 +13,178 @@
             height: 100vh;
         }
 
-        /* Головне кольорове коло */
+        #progress-container {
+            position: absolute; top: 20px; width: 90%;
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+        }
+        .dot { width: 15px; height: 15px; border-radius: 50%; background: rgba(255,255,255,0.2); transition: 0.3s; }
+        .dot.active { background: #FFD700; transform: scale(1.3); box-shadow: 0 0 10px #FFD700; }
+
         #color-circle {
-            width: 250px; height: 250px; border-radius: 50%;
-            border: 10px solid white; box-shadow: 0 0 50px rgba(255,255,255,0.2);
-            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            margin-bottom: 40px;
+            width: 220px; height: 220px; border-radius: 50%;
+            border: 8px solid white; box-shadow: 0 0 40px rgba(255,255,255,0.1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-bottom: 30px; display: none;
         }
 
-        /* Кнопка мікрофона */
         #mic-btn {
-            width: 100px; height: 100px; border-radius: 50%;
+            width: 90px; height: 90px; border-radius: 50%;
             border: none; background: #ff3d7f; cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 3rem; box-shadow: 0 8px 0 #b32a59;
+            display: none; align-items: center; justify-content: center;
+            font-size: 2.5rem; box-shadow: 0 6px 0 #b32a59;
             transition: all 0.2s;
         }
-        #mic-btn.listening {
-            background: #00c170; box-shadow: 0 0 30px #00c170;
-            animation: pulse-green 1s infinite;
-            transform: scale(1.1);
-        }
-        @keyframes pulse-green {
-            0% { box-shadow: 0 0 0 0 rgba(0, 193, 112, 0.7); }
-            70% { box-shadow: 0 0 0 20px rgba(0, 193, 112, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 193, 112, 0); }
-        }
+        #mic-btn.listening { background: #00c170; box-shadow: 0 0 30px #00c170; animation: pulse 1s infinite; }
+        
+        @keyframes pulse { 0% {transform: scale(1);} 50% {transform: scale(1.1);} 100% {transform: scale(1);} }
 
         #status-text {
-            color: white; font-size: 1.8rem; text-align: center;
-            margin-top: 20px; padding: 0 20px; min-height: 2.5em;
+            color: white; font-size: 1.6rem; text-align: center;
+            margin-top: 20px; padding: 0 25px; min-height: 3em; line-height: 1.4;
         }
 
-        .star-bar { position: absolute; top: 20px; display: flex; gap: 10px; }
-        .star { font-size: 2rem; opacity: 0.3; transition: 0.3s; }
-        .star.active { opacity: 1; transform: scale(1.2); }
+        /* Екрани */
+        #start-overlay, #win-overlay {
+            position: fixed; inset: 0; background: #1a0033; z-index: 100;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        #win-overlay { display: none; background: rgba(26, 0, 51, 0.95); }
+
+        .btn-main {
+            padding: 20px 50px; font-size: 2rem; border-radius: 30px; border: none;
+            background: #FFD700; color: #1a0033; font-weight: 900; cursor: pointer;
+            box-shadow: 0 8px 0 #b39700; transition: transform 0.1s;
+        }
+        .btn-main:active { transform: translateY(4px); box-shadow: 0 4px 0 #b39700; }
     </style>
 </head>
 <body>
 
-    <div class="star-bar" id="star-bar">
-        <span class="star">⭐</span><span class="star">⭐</span><span class="star">⭐</span><span class="star">⭐</span><span class="star">⭐</span>
+    <div id="start-overlay">
+        <div style="font-size: 5rem; margin-bottom: 20px;">🎨🌈✨</div>
+        <button id="btn-go" class="btn-main">ПОЧАТИ ГРУ</button>
     </div>
 
+    <div id="win-overlay">
+        <div style="font-size: 6rem; margin-bottom: 20px;">🏆🎉🎈</div>
+        <h1 style="color: #FFD700; text-align: center; margin-bottom: 20px;">ПЕРЕМОГА!</h1>
+        <button id="btn-restart" class="btn-main">ГРАТИ ЩЕ РАЗ</button>
+    </div>
+
+    <div id="progress-container"></div>
     <div id="color-circle"></div>
-    
     <button id="mic-btn">🎤</button>
-    
-    <div id="status-text">Натисни мікрофон і скажи колір!</div>
+    <div id="status-text">Готовий?</div>
 
     <script>
         const colorCircle = document.getElementById('color-circle');
         const micBtn = document.getElementById('mic-btn');
         const statusText = document.getElementById('status-text');
-        const stars = document.querySelectorAll('.star');
+        const progressContainer = document.getElementById('progress-container');
+        const winOverlay = document.getElementById('win-overlay');
 
-        let score = 0;
-        
-        // База кольорів та їх назв трьома мовами
-        const colors = [
-            { hex: '#0000FF', names: ['синій', 'синій', 'голубий', 'синий', 'голубой', 'blue'] },
-            { hex: '#FF0000', names: ['червоний', 'червоний', 'красный', 'red'] },
-            { hex: '#00FF00', names: ['зелений', 'зелений', 'зеленый', 'green'] },
-            { hex: '#FFFF00', names: ['жовтий', 'жовтий', 'желтый', 'yellow'] },
-            { hex: '#FF00FF', names: ['рожевий', 'рожевий', 'фіолетовий', 'розовый', 'фиолетовый', 'pink', 'purple'] }
+        const allColors = [
+            { hex: '#FF0000', names: ['червоний', 'красный', 'red'] },
+            { hex: '#0000FF', names: ['синій', 'синий', 'blue'] },
+            { hex: '#00FF00', names: ['зелений', 'зеленый', 'green'] },
+            { hex: '#FFFF00', names: ['жовтий', 'желтый', 'yellow'] },
+            { hex: '#FF8C00', names: ['оранжевий', 'помаранчевий', 'оранжевый', 'orange'] },
+            { hex: '#FF00FF', names: ['рожевий', 'розовый', 'pink'] },
+            { hex: '#FFFFFF', names: ['білий', 'белый', 'white'] },
+            { hex: '#000000', names: ['чорний', 'черный', 'black'] },
+            { hex: '#8B4513', names: ['коричневий', 'коричневый', 'brown'] },
+            { hex: '#808080', names: ['сірий', 'серый', 'gray'] }
         ];
 
-        let currentIndex = 0;
+        let remainingColors = [];
+        let solvedCount = 0;
+        let currentTarget = null;
 
-        // Налаштування розпізнавання мови
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const recognition = new SpeechRecognition();
-        
-        recognition.continuous = false;
-        recognition.interimResults = false;
-        // Для мультимовності краще ставити основну, але він розуміє схожі звуки
-        recognition.lang = 'uk-UA'; 
+        const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+        recognition.lang = 'uk-UA';
 
-        function updateColor() {
-            if (score >= 5) {
-                statusText.textContent = "ПЕРЕМОГА! Ти знаєш всі кольори! 🎉";
-                colorCircle.style.display = 'none';
+        function speak(text, onEnd) {
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = 'uk-UA';
+            u.rate = 0.9;
+            if (onEnd) u.onend = onEnd;
+            window.speechSynthesis.speak(u);
+        }
+
+        function initGame() {
+            remainingColors = [...allColors];
+            solvedCount = 0;
+            winOverlay.style.display = 'none';
+            colorCircle.style.display = 'block';
+            colorCircle.style.transform = "scale(1)";
+            micBtn.style.display = 'flex';
+            
+            // Скидання крапок прогресу
+            progressContainer.innerHTML = '';
+            allColors.forEach(() => {
+                const dot = document.createElement('div');
+                dot.className = 'dot';
+                progressContainer.appendChild(dot);
+            });
+            
+            nextTask();
+        }
+
+        document.getElementById('btn-go').onclick = () => {
+            document.getElementById('start-overlay').style.display = 'none';
+            const intro = "Привіт! Називай кольори, які бачиш. Натискай на мікрофон і говори!";
+            speak(intro);
+            initGame();
+        };
+
+        document.getElementById('btn-restart').onclick = () => {
+            initGame();
+            speak("Починаємо знову! Який це колір?");
+        };
+
+        function nextTask() {
+            if (remainingColors.length === 0) {
+                showWin();
                 return;
             }
-            currentIndex = Math.floor(Math.random() * colors.length);
-            colorCircle.style.backgroundColor = colors[currentIndex].hex;
+            const randomIndex = Math.floor(Math.random() * remainingColors.length);
+            currentTarget = remainingColors[randomIndex];
+            colorCircle.style.backgroundColor = currentTarget.hex;
             statusText.textContent = "Який це колір?";
         }
 
-        function speak(text) {
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'uk-UA';
-            window.speechSynthesis.speak(utterance);
+        function showWin() {
+            colorCircle.style.display = "none";
+            micBtn.style.display = "none";
+            statusText.textContent = "";
+            winOverlay.style.display = 'flex';
+            speak("Вітаю! Ти знаєш усі кольори! Ти справжній розумник!");
         }
 
         micBtn.onclick = () => {
             recognition.start();
             micBtn.classList.add('listening');
-            statusText.textContent = "Слухаю тебе...";
         };
 
         recognition.onresult = (event) => {
             micBtn.classList.remove('listening');
             const result = event.results[0][0].transcript.toLowerCase();
-            console.log("Дитина сказала:", result);
-
-            const possibleNames = colors[currentIndex].names;
-            
-            // Перевірка, чи є сказане слово в списку варіантів
-            const isCorrect = possibleNames.some(name => result.includes(name));
+            const isCorrect = currentTarget.names.some(name => result.includes(name));
 
             if (isCorrect) {
-                statusText.textContent = `Так! Це ${result}! ✨`;
-                stars[score].classList.add('active');
-                score++;
-                speak("Правильно! Ти молодець!");
-                setTimeout(updateColor, 2000);
+                remainingColors = remainingColors.filter(c => c !== currentTarget);
+                document.querySelectorAll('.dot')[solvedCount].classList.add('active');
+                solvedCount++;
+                statusText.textContent = `Так, це ${result}! ✨`;
+                speak(`Молодець!`);
+                setTimeout(nextTask, 1500);
             } else {
-                statusText.textContent = `Спробуй ще раз! Ти сказав: ${result}`;
-                speak("Майже! Спробуй ще раз!");
+                statusText.textContent = `Ой, спробуй ще!`;
+                speak("Спробуй ще раз!");
             }
         };
 
-        recognition.onerror = () => {
-            micBtn.classList.remove('listening');
-            statusText.textContent = "Ой, я не почув. Натисни ще раз!";
-        };
-
-        recognition.onspeechend = () => {
-            recognition.stop();
-            micBtn.classList.remove('listening');
-        };
-
-        // Запуск першого завдання
-        updateColor();
+        recognition.onerror = () => micBtn.classList.remove('listening');
     </script>
 </body>
 </html>
