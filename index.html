@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Кольорова Магія! 🌈</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@900&display=swap');
+        
+        body { 
+            margin: 0; overflow: hidden; font-family: 'Nunito', sans-serif;
+            background: #1a0033; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            height: 100vh;
+        }
+
+        /* Головне кольорове коло */
+        #color-circle {
+            width: 250px; height: 250px; border-radius: 50%;
+            border: 10px solid white; box-shadow: 0 0 50px rgba(255,255,255,0.2);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-bottom: 40px;
+        }
+
+        /* Кнопка мікрофона */
+        #mic-btn {
+            width: 100px; height: 100px; border-radius: 50%;
+            border: none; background: #ff3d7f; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3rem; box-shadow: 0 8px 0 #b32a59;
+            transition: all 0.2s;
+        }
+        #mic-btn.listening {
+            background: #00c170; box-shadow: 0 0 30px #00c170;
+            animation: pulse-green 1s infinite;
+            transform: scale(1.1);
+        }
+        @keyframes pulse-green {
+            0% { box-shadow: 0 0 0 0 rgba(0, 193, 112, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(0, 193, 112, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 193, 112, 0); }
+        }
+
+        #status-text {
+            color: white; font-size: 1.8rem; text-align: center;
+            margin-top: 20px; padding: 0 20px; min-height: 2.5em;
+        }
+
+        .star-bar { position: absolute; top: 20px; display: flex; gap: 10px; }
+        .star { font-size: 2rem; opacity: 0.3; transition: 0.3s; }
+        .star.active { opacity: 1; transform: scale(1.2); }
+    </style>
+</head>
+<body>
+
+    <div class="star-bar" id="star-bar">
+        <span class="star">⭐</span><span class="star">⭐</span><span class="star">⭐</span><span class="star">⭐</span><span class="star">⭐</span>
+    </div>
+
+    <div id="color-circle"></div>
+    
+    <button id="mic-btn">🎤</button>
+    
+    <div id="status-text">Натисни мікрофон і скажи колір!</div>
+
+    <script>
+        const colorCircle = document.getElementById('color-circle');
+        const micBtn = document.getElementById('mic-btn');
+        const statusText = document.getElementById('status-text');
+        const stars = document.querySelectorAll('.star');
+
+        let score = 0;
+        
+        // База кольорів та їх назв трьома мовами
+        const colors = [
+            { hex: '#0000FF', names: ['синій', 'синій', 'голубий', 'синий', 'голубой', 'blue'] },
+            { hex: '#FF0000', names: ['червоний', 'червоний', 'красный', 'red'] },
+            { hex: '#00FF00', names: ['зелений', 'зелений', 'зеленый', 'green'] },
+            { hex: '#FFFF00', names: ['жовтий', 'жовтий', 'желтый', 'yellow'] },
+            { hex: '#FF00FF', names: ['рожевий', 'рожевий', 'фіолетовий', 'розовый', 'фиолетовый', 'pink', 'purple'] }
+        ];
+
+        let currentIndex = 0;
+
+        // Налаштування розпізнавання мови
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        // Для мультимовності краще ставити основну, але він розуміє схожі звуки
+        recognition.lang = 'uk-UA'; 
+
+        function updateColor() {
+            if (score >= 5) {
+                statusText.textContent = "ПЕРЕМОГА! Ти знаєш всі кольори! 🎉";
+                colorCircle.style.display = 'none';
+                return;
+            }
+            currentIndex = Math.floor(Math.random() * colors.length);
+            colorCircle.style.backgroundColor = colors[currentIndex].hex;
+            statusText.textContent = "Який це колір?";
+        }
+
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'uk-UA';
+            window.speechSynthesis.speak(utterance);
+        }
+
+        micBtn.onclick = () => {
+            recognition.start();
+            micBtn.classList.add('listening');
+            statusText.textContent = "Слухаю тебе...";
+        };
+
+        recognition.onresult = (event) => {
+            micBtn.classList.remove('listening');
+            const result = event.results[0][0].transcript.toLowerCase();
+            console.log("Дитина сказала:", result);
+
+            const possibleNames = colors[currentIndex].names;
+            
+            // Перевірка, чи є сказане слово в списку варіантів
+            const isCorrect = possibleNames.some(name => result.includes(name));
+
+            if (isCorrect) {
+                statusText.textContent = `Так! Це ${result}! ✨`;
+                stars[score].classList.add('active');
+                score++;
+                speak("Правильно! Ти молодець!");
+                setTimeout(updateColor, 2000);
+            } else {
+                statusText.textContent = `Спробуй ще раз! Ти сказав: ${result}`;
+                speak("Майже! Спробуй ще раз!");
+            }
+        };
+
+        recognition.onerror = () => {
+            micBtn.classList.remove('listening');
+            statusText.textContent = "Ой, я не почув. Натисни ще раз!";
+        };
+
+        recognition.onspeechend = () => {
+            recognition.stop();
+            micBtn.classList.remove('listening');
+        };
+
+        // Запуск першого завдання
+        updateColor();
+    </script>
+</body>
+</html>
